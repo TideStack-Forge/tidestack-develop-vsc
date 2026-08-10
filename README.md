@@ -2,7 +2,7 @@
 
 TideStack Develop adds visual editing support for TideStack JSON metadata files in Visual Studio Code. It also provides a shared project configuration entry for binding a workspace to a TideStack development platform.
 
-Extension identifier: `TideStackForge.develop`.
+Extension identifier: `tidestack.develop`.
 
 ## Highlights
 

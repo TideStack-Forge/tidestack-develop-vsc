@@ -9,6 +9,7 @@ import {
   mapMetadataSourcePath,
   MetadataRevisionConflictError,
   metadataHostErrorCode,
+  normalizeIdeLocale,
   type MetadataEditorState,
   metadataEditorRuntimeFileName,
   metadataEditorWebviewTemplateFileName,
@@ -217,7 +218,8 @@ export class MetadataCustomEditorProvider implements vscode.CustomTextEditorProv
     const amisSdkRoot = vscode.Uri.joinPath(webviewAssetRoot, 'amis-sdk')
     const runtimeRoot = vscode.Uri.joinPath(webviewAssetRoot, 'runtime')
     webviewPanel.webview.options = { enableScripts: true, localResourceRoots: [webviewAssetRoot] }
-    const initialState = await createMetadataEditorState(host, uri, this.registration.metadataType)
+    const locale = this.getEditorLocale()
+    const initialState = await createMetadataEditorState(host, uri, this.registration.metadataType, locale)
     const htmlTemplate = await this.loadWebviewTemplate(runtimeRoot)
     webviewPanel.webview.html = this.renderHtml(
       webviewPanel.webview,
@@ -226,12 +228,13 @@ export class MetadataCustomEditorProvider implements vscode.CustomTextEditorProv
       runtimeRoot,
       initialState,
       htmlTemplate,
+      locale,
     )
 
     const publishState = async (): Promise<void> => {
       await webviewPanel.webview.postMessage({
         type: 'state',
-        ...(await createMetadataEditorState(host, uri, this.registration.metadataType)),
+        ...(await createMetadataEditorState(host, uri, this.registration.metadataType, locale)),
       })
     }
 
@@ -288,7 +291,7 @@ export class MetadataCustomEditorProvider implements vscode.CustomTextEditorProv
             type: 'response',
             requestId: message.requestId,
             ok: true,
-            result: await createMetadataEditorState(host, uri, this.registration.metadataType),
+            result: await createMetadataEditorState(host, uri, this.registration.metadataType, locale),
           })
         } catch (error) {
           await webviewPanel.webview.postMessage({
@@ -307,7 +310,7 @@ export class MetadataCustomEditorProvider implements vscode.CustomTextEditorProv
             type: 'response',
             requestId: message.requestId,
             ok: true,
-            result: await createMetadataEditorStateFromDocument(host, uri, this.registration.metadataType, next),
+            result: await createMetadataEditorStateFromDocument(host, uri, this.registration.metadataType, next, locale),
           })
         } catch (error) {
           await webviewPanel.webview.postMessage({
@@ -348,6 +351,7 @@ export class MetadataCustomEditorProvider implements vscode.CustomTextEditorProv
     runtimeRoot: vscode.Uri,
     initialState: MetadataEditorState,
     htmlTemplate: string,
+    locale: 'zh-CN' | 'en-US',
   ): string {
     const nonce = randomBytes(16).toString('base64')
     const initialStateJson = toScriptJson(initialState)
@@ -379,7 +383,7 @@ export class MetadataCustomEditorProvider implements vscode.CustomTextEditorProv
     window.OuroborosMetadataEditorHost = {
       initialState: ${initialStateJson},
       theme: ${JSON.stringify(this.getAmisTheme())},
-      locale: 'zh-CN',
+      locale: ${JSON.stringify(locale)},
       transport: {
         saveText: (text, revision) => requestHost('saveText', { text, revision }),
         validate: (text) => requestHost('validate', { text }),
@@ -442,6 +446,10 @@ export class MetadataCustomEditorProvider implements vscode.CustomTextEditorProv
   private getAmisTheme(): 'cxd' | 'dark' {
     const kind = vscode.window.activeColorTheme.kind
     return kind === vscode.ColorThemeKind.Dark || kind === vscode.ColorThemeKind.HighContrast ? 'dark' : 'cxd'
+  }
+
+  private getEditorLocale(): 'zh-CN' | 'en-US' {
+    return normalizeIdeLocale(vscode.env.language)
   }
 
   private requestWebviewFlush(

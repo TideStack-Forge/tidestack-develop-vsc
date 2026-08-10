@@ -1,6 +1,6 @@
 {
   "name": "develop",
-  "displayName": "TideStack Develop",
+  "displayName": "%extension.displayName%",
   "version": "0.1.0",
   "private": true,
   "type": "commonjs",
@@ -39,61 +39,61 @@
     "commands": [
       {
         "command": "tidestack.develop.configure",
-        "title": "TideStack Develop Config: Configure Project"
+        "title": "%command.configureProject%"
       },
       {
         "command": "tidestack.develop.openConfig",
-        "title": "TideStack Develop Config: Open Config Files"
+        "title": "%command.openConfigFiles%"
       },
       {
         "command": "tidestack.metadata.newFile",
-        "title": "TideStack Metadata: New File"
+        "title": "%command.newMetadataFile%"
       },
       {
         "command": "tidestack.metadata.newAuthorityFile",
-        "title": "权限项模型..."
+        "title": "%metadata.type.authority.command%"
       },
       {
         "command": "tidestack.metadata.newMenuFile",
-        "title": "菜单模型..."
+        "title": "%metadata.type.menu.command%"
       },
       {
         "command": "tidestack.metadata.newDevMenuFile",
-        "title": "开发菜单模型..."
+        "title": "%metadata.type.dev-menu.command%"
       },
       {
         "command": "tidestack.metadata.newUiModelFile",
-        "title": "UI 模型..."
+        "title": "%metadata.type.ui-model.command%"
       },
       {
         "command": "tidestack.metadata.newUiSchemaFile",
-        "title": "UI Schema..."
+        "title": "%metadata.type.ui-schema.command%"
       },
       {
         "command": "tidestack.metadata.newAppModuleFile",
-        "title": "应用模块..."
+        "title": "%metadata.type.app-module.command%"
       },
       {
         "command": "tidestack.metadata.newConfigurationFile",
-        "title": "配置项..."
+        "title": "%metadata.type.configuration.command%"
       },
       {
         "command": "tidestack.metadata.newConfigurationGroupFile",
-        "title": "配置分组..."
+        "title": "%metadata.type.configuration-group.command%"
       },
       {
         "command": "tidestack.metadata.openSource",
-        "title": "Source Editor"
+        "title": "%command.openSourceEditor%"
       },
       {
         "command": "tidestack.metadata.openVisual",
-        "title": "Visual Editor"
+        "title": "%command.openVisualEditor%"
       }
     ],
     "submenus": [
       {
         "id": "tidestack.metadata.newFileSubmenu",
-        "label": "创建 TideStack Metadata"
+        "label": "%metadata.new.submenu%"
       }
     ],
     "menus": {
@@ -165,7 +165,7 @@
     "customEditors": [
       {
         "viewType": "tidestack.metadataEditor.authority",
-        "displayName": "TideStack Authority Metadata Editor",
+        "displayName": "%customEditor.authority%",
         "selector": [
           {
             "filenamePattern": "*.authority.json"
@@ -178,7 +178,7 @@
       },
       {
         "viewType": "tidestack.metadataEditor.menu",
-        "displayName": "TideStack Menu Metadata Editor",
+        "displayName": "%customEditor.menu%",
         "selector": [
           {
             "filenamePattern": "*.menu.json"
@@ -191,7 +191,7 @@
       },
       {
         "viewType": "tidestack.metadataEditor.devMenu",
-        "displayName": "TideStack Dev Menu Metadata Editor",
+        "displayName": "%customEditor.devMenu%",
         "selector": [
           {
             "filenamePattern": "*.dev-menu.json"
@@ -204,7 +204,7 @@
       },
       {
         "viewType": "tidestack.metadataEditor.uiModel",
-        "displayName": "TideStack UI Model Metadata Editor",
+        "displayName": "%customEditor.uiModel%",
         "selector": [
           { "filenamePattern": "*.ui-model.json" },
           { "filenamePattern": "**/resources/META-INF/ouroboros/ui-model/**/*.json" }
@@ -213,7 +213,7 @@
       },
       {
         "viewType": "tidestack.metadataEditor.uiSchema",
-        "displayName": "TideStack UI Schema Metadata Editor",
+        "displayName": "%customEditor.uiSchema%",
         "selector": [
           { "filenamePattern": "*.ui-schema.json" },
           { "filenamePattern": "**/resources/META-INF/ouroboros/ui-schema/**/*.json" }
@@ -222,7 +222,7 @@
       },
       {
         "viewType": "tidestack.metadataEditor.appModule",
-        "displayName": "TideStack App Module Metadata Editor",
+        "displayName": "%customEditor.appModule%",
         "selector": [
           { "filenamePattern": "**/src/main/metadata/app-modules.json" },
           { "filenamePattern": "**/resources/META-INF/ouroboros/metadata/app-modules.json" },
@@ -232,7 +232,7 @@
       },
       {
         "viewType": "tidestack.metadataEditor.configuration",
-        "displayName": "TideStack Configuration Metadata Editor",
+        "displayName": "%customEditor.configuration%",
         "selector": [
           { "filenamePattern": "**/src/main/metadata/configuration.json" },
           { "filenamePattern": "**/resources/META-INF/ouroboros/metadata/configuration.json" },
@@ -242,7 +242,7 @@
       },
       {
         "viewType": "tidestack.metadataEditor.configurationGroup",
-        "displayName": "TideStack Configuration Group Metadata Editor",
+        "displayName": "%customEditor.configurationGroup%",
         "selector": [
           { "filenamePattern": "**/src/main/metadata/configuration-groups.json" },
           { "filenamePattern": "**/resources/META-INF/ouroboros/metadata/configuration-groups.json" },
@@ -254,11 +254,12 @@
   },
   "scripts": {
     "build:shared": "node scripts/verify-shared-assets.mjs",
+    "sync:i18n": "node scripts/sync-i18n-assets.mjs",
     "vendor:shared": "node scripts/vendor-shared-package.mjs",
     "copy:webview-assets": "node scripts/copy-webview-assets.mjs",
     "verify:webview-assets": "node scripts/verify-webview-assets.mjs",
     "verify:vsix-assets": "node scripts/verify-vsix-assets.mjs",
-    "compile": "npm run build:shared && tsc -p . && npm run vendor:shared && npm run copy:webview-assets && npm run verify:webview-assets",
+    "compile": "npm run sync:i18n && npm run build:shared && tsc -p . && npm run vendor:shared && npm run copy:webview-assets && npm run verify:webview-assets",
     "package:vsix": "npm run compile && npm exec --yes @vscode/vsce -- package --no-dependencies --allow-missing-repository --skip-license && npm run verify:vsix-assets"
   },
   "dependencies": {

@@ -2,6 +2,7 @@
 /node_modules/
 /dist/
 /*.vsix
+package.nls*.json
 *.log
 
 common/amis-schema/node_modules/

@@ -1,67 +1,39 @@
 import * as vscode from 'vscode'
 import {
+  createMetadataFileCreationPlan,
   createMetadataFileTemplateDefaultValues,
+  defaultMetadataFilePath,
   getContributionByType,
+  localDevelopConfigDocument,
+  localDevelopConfigFromDocument,
+  localizeMetadataTypeContribution,
   mapMetadataPackagedResourcePath,
   mapMetadataSourcePath,
+  metadataFilePathPrompt,
+  metadataEditorRegistrationDefinitions,
+  metadataTemplateFieldPrompt,
   metadataTypeContributions,
-  serializeMetadataFileTemplate,
+  newMetadataFileCommandDefinitions,
+  normalizeIdeLocale,
+  normalizeMetadataFilePath,
+  projectDevelopConfigDocument,
+  projectDevelopConfigFromDocument,
+  tideStackText,
+  type JsonObject,
   type MetadataFileTemplateField,
   type MetadataFileTemplateValues,
   type MetadataTypeContribution,
+  type TideStackDevelopConfigContract,
+  type TideStackDevelopConfigSectionContract,
+  type TideStackDevelopLocalConfig as LocalConfig,
+  type TideStackDevelopProjectConfig as ProjectConfig,
 } from 'ouroboros-metadata-editor'
 import { MetadataCustomEditorProvider, type MetadataCustomEditorRegistration } from './metadataCustomEditor'
 
 const developConfigContractRelativePath = 'dist/contracts/tidestack-develop-config.json'
-const metadataSourceRoot = 'src/main/metadata'
 
-const metadataEditorRegistrations: MetadataCustomEditorRegistration[] = [
-  { viewType: 'tidestack.metadataEditor.authority', metadataType: 'authority' },
-  { viewType: 'tidestack.metadataEditor.menu', metadataType: 'menu' },
-  { viewType: 'tidestack.metadataEditor.devMenu', metadataType: 'dev-menu' },
-  { viewType: 'tidestack.metadataEditor.uiModel', metadataType: 'ui-model' },
-  { viewType: 'tidestack.metadataEditor.uiSchema', metadataType: 'ui-schema' },
-  { viewType: 'tidestack.metadataEditor.appModule', metadataType: 'app-module' },
-  { viewType: 'tidestack.metadataEditor.configuration', metadataType: 'configuration' },
-  { viewType: 'tidestack.metadataEditor.configurationGroup', metadataType: 'configuration-group' },
-]
-
-const newMetadataFileCommands: Array<{ command: string; metadataType: string }> = [
-  { command: 'tidestack.metadata.newAuthorityFile', metadataType: 'authority' },
-  { command: 'tidestack.metadata.newMenuFile', metadataType: 'menu' },
-  { command: 'tidestack.metadata.newDevMenuFile', metadataType: 'dev-menu' },
-  { command: 'tidestack.metadata.newUiModelFile', metadataType: 'ui-model' },
-  { command: 'tidestack.metadata.newUiSchemaFile', metadataType: 'ui-schema' },
-  { command: 'tidestack.metadata.newAppModuleFile', metadataType: 'app-module' },
-  { command: 'tidestack.metadata.newConfigurationFile', metadataType: 'configuration' },
-  { command: 'tidestack.metadata.newConfigurationGroupFile', metadataType: 'configuration-group' },
-]
-
-type JsonObject = Record<string, unknown>
-
-type ConfigSectionContract = {
-  path: string
-  fields: string[]
-  legacyAliases: Record<string, string[]>
-  removedFields?: string[]
-}
-
-type TideStackDevelopConfigContract = {
-  schemaVersion: number
-  project: ConfigSectionContract
-  local: ConfigSectionContract
-}
-
-type ProjectConfig = {
-  schemaVersion: number
-  developmentServerUrl: string
-  appName: string
-}
-
-type LocalConfig = {
-  schemaVersion: number
-  devKey: string
-}
+const metadataEditorRegistrations: MetadataCustomEditorRegistration[] = metadataEditorRegistrationDefinitions
+const newMetadataFileCommands = newMetadataFileCommandDefinitions
 
 let developConfigContract: TideStackDevelopConfigContract | undefined
 let developConfigContractPromise: Promise<TideStackDevelopConfigContract> | undefined
@@ -92,7 +64,7 @@ export function deactivate(): void {}
 async function openMetadataSourceEditor(uri?: vscode.Uri): Promise<void> {
   const targetUri = normalizeCommandUri(uri) ?? MetadataCustomEditorProvider.getActiveResource()
   if (!targetUri) {
-    await vscode.window.showWarningMessage('Open a TideStack metadata visual editor before switching to source.')
+    await vscode.window.showWarningMessage(text('metadata.switch.openVisualFirst'))
     return
   }
 
@@ -112,13 +84,13 @@ async function openMetadataSourceEditor(uri?: vscode.Uri): Promise<void> {
 async function openMetadataVisualEditor(uri?: vscode.Uri): Promise<void> {
   const targetUri = normalizeCommandUri(uri) ?? vscode.window.activeTextEditor?.document.uri
   if (!targetUri) {
-    await vscode.window.showWarningMessage('Open a TideStack metadata JSON file before switching to the visual editor.')
+    await vscode.window.showWarningMessage(text('metadata.switch.openJsonFirst'))
     return
   }
 
   const registration = resolveMetadataEditorRegistration(targetUri)
   if (!registration) {
-    await vscode.window.showWarningMessage('The current JSON file is not a supported TideStack metadata file.')
+    await vscode.window.showWarningMessage(text('metadata.switch.unsupportedJson'))
     return
   }
 
@@ -129,39 +101,44 @@ async function openMetadataVisualEditor(uri?: vscode.Uri): Promise<void> {
 }
 
 async function createMetadataFile(uri?: vscode.Uri, metadataType?: string): Promise<void> {
+  const locale = currentIdeLocale()
   const selectedUri = normalizeCommandUri(uri)
   const workspaceFolder = await selectWorkspaceFolderForUri(selectedUri)
   if (!workspaceFolder) {
     return
   }
 
-  const contribution = metadataType ? getContributionByType(metadataType) : await selectMetadataContribution()
+  const contribution = metadataType
+    ? getContributionByType(metadataType)
+    : await selectMetadataContribution(locale)
   if (!contribution) {
     if (metadataType) {
-      await vscode.window.showErrorMessage(`Unsupported TideStack metadata type: ${metadataType}`)
+      await vscode.window.showErrorMessage(text('metadata.error.unsupportedType', { metadataType }))
     }
     return
   }
+  const localizedContribution = localizeMetadataTypeContribution(contribution, locale)
 
-  const targetPath = await promptForMetadataPath(workspaceFolder, selectedUri, contribution)
+  const targetPath = await promptForMetadataPath(workspaceFolder, selectedUri, localizedContribution, locale)
   if (!targetPath) {
     return
   }
 
-  const templateValues = await promptForTemplateValues(contribution, targetPath)
+  const templateValues = await promptForTemplateValues(localizedContribution, targetPath, locale)
   if (!templateValues) {
     return
   }
 
   const targetUri = vscode.Uri.joinPath(workspaceFolder.uri, ...targetPath.split('/'))
   if (await fileExists(targetUri)) {
-    await vscode.window.showErrorMessage(`TideStack metadata file already exists: ${targetPath}`)
+    await vscode.window.showErrorMessage(text('metadata.error.fileExists', { targetPath }))
     return
   }
 
-  const targetParts = targetPath.split('/')
+  const creationPlan = createMetadataFileCreationPlan(localizedContribution, targetPath, templateValues)
+  const targetParts = creationPlan.targetPath.split('/')
   await vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(workspaceFolder.uri, ...targetParts.slice(0, -1)))
-  await vscode.workspace.fs.writeFile(targetUri, Buffer.from(serializeMetadataFileTemplate(contribution, templateValues), 'utf8'))
+  await vscode.workspace.fs.writeFile(targetUri, Buffer.from(creationPlan.text, 'utf8'))
 
   const registration = metadataEditorRegistrations.find((candidate) => candidate.metadataType === contribution.type)
   await vscode.commands.executeCommand('vscode.openWith', targetUri, registration?.viewType ?? 'default', {
@@ -192,7 +169,7 @@ async function selectWorkspaceFolderForUri(uri?: vscode.Uri): Promise<vscode.Wor
   }
   const workspaceFolders = vscode.workspace.workspaceFolders
   if (!workspaceFolders || workspaceFolders.length === 0) {
-    await vscode.window.showErrorMessage('Open a workspace before creating TideStack metadata files.')
+    await vscode.window.showErrorMessage(text('metadata.error.openWorkspace'))
     return undefined
   }
   if (workspaceFolders.length === 1) {
@@ -200,21 +177,21 @@ async function selectWorkspaceFolderForUri(uri?: vscode.Uri): Promise<vscode.Wor
   }
   const selected = await vscode.window.showQuickPick(
     workspaceFolders.map((folder) => ({ label: folder.name, description: folder.uri.fsPath, folder })),
-    { placeHolder: 'Select the workspace for the new TideStack metadata file' },
+    { placeHolder: text('metadata.new.selectWorkspace') },
   )
   return selected?.folder
 }
 
-async function selectMetadataContribution(): Promise<MetadataTypeContribution | undefined> {
+async function selectMetadataContribution(locale: string): Promise<MetadataTypeContribution | undefined> {
   const selected = await vscode.window.showQuickPick(
     metadataTypeContributions
       .filter((contribution) => contribution.fileTemplate)
       .map((contribution) => ({
-        label: contribution.displayName,
+        label: localizeMetadataTypeContribution(contribution, locale).displayName,
         description: contribution.fileTemplate?.defaultFileName,
         contribution,
       })),
-    { placeHolder: 'Select TideStack metadata file type' },
+    { placeHolder: text('metadata.new.selectType') },
   )
   return selected?.contribution
 }
@@ -223,30 +200,17 @@ async function promptForMetadataPath(
   workspaceFolder: vscode.WorkspaceFolder,
   selectedUri: vscode.Uri | undefined,
   contribution: MetadataTypeContribution,
+  locale: string,
 ): Promise<string | undefined> {
   const selectedDirectory = await selectedRelativeDirectory(workspaceFolder, selectedUri)
-  const defaultPath = defaultMetadataPath(selectedDirectory, contribution)
+  const defaultPath = defaultMetadataFilePath(selectedDirectory, contribution)
   const value = await vscode.window.showInputBox({
-    prompt: `New ${contribution.displayName} file path`,
+    prompt: metadataFilePathPrompt(contribution, locale),
     value: defaultPath,
     ignoreFocusOut: true,
-    validateInput: (input) => normalizeMetadataTemplatePath(input, contribution, selectedDirectory).error,
+    validateInput: (input) => normalizeMetadataFilePath(input, contribution, selectedDirectory, locale).error,
   })
-  return value === undefined ? undefined : normalizeMetadataTemplatePath(value, contribution, selectedDirectory).path
-}
-
-function defaultMetadataPath(
-  selectedDirectory: string | undefined,
-  contribution: MetadataTypeContribution,
-): string {
-  if (contribution.fixedFileName) {
-    return `${metadataSourceRoot}/${contribution.fixedFileName}`
-  }
-  const defaultFileName = contribution.fileTemplate?.defaultFileName ?? contribution.fixedFileName ?? 'metadata.json'
-  if (selectedDirectory) {
-    return `${selectedDirectory}/${defaultFileName}`
-  }
-  return `${metadataSourceRoot}/${defaultFileName}`
+  return value === undefined ? undefined : normalizeMetadataFilePath(value, contribution, selectedDirectory, locale).path
 }
 
 async function selectedRelativeDirectory(
@@ -268,45 +232,10 @@ async function selectedRelativeDirectory(
   return dirname(pathInWorkspace)
 }
 
-function normalizeMetadataTemplatePath(
-  input: string,
-  contribution: MetadataTypeContribution,
-  selectedDirectory?: string,
-): { path?: string; error?: string } {
-  const normalizedInput = normalizePath(input.trim()).replace(/^\.\//, '')
-  const directoryInput = normalizedInput.endsWith('/')
-  const trimmed = trimSlashes(normalizedInput)
-  if (!trimmed) {
-    return { error: 'Enter a metadata file path.' }
-  }
-
-  const defaultFileName = contribution.fileTemplate?.defaultFileName ?? contribution.fixedFileName
-  if (contribution.fixedFileName) {
-    const path = trimmed.includes('/') ? trimmed : `${metadataSourceRoot}/${trimmed}`
-    if (basename(path) !== contribution.fixedFileName || path !== `${metadataSourceRoot}/${contribution.fixedFileName}`) {
-      return { error: `${contribution.displayName} must be ${metadataSourceRoot}/${contribution.fixedFileName}.` }
-    }
-    return { path }
-  }
-
-  if (!contribution.fileSuffix) {
-    return defaultFileName ? { path: `${metadataSourceRoot}/${defaultFileName}` } : { error: 'This metadata type has no file template.' }
-  }
-
-  const filePath = directoryInput ? `${trimmed}/${defaultFileName}` : trimmed
-  const withSuffix = filePath.endsWith('.json') ? filePath : `${filePath}${contribution.fileSuffix}`
-  if (!withSuffix.endsWith(contribution.fileSuffix)) {
-    return { error: `${contribution.displayName} files must end with ${contribution.fileSuffix}.` }
-  }
-  if (withSuffix.includes('/') || !selectedDirectory) {
-    return { path: withSuffix.includes('/') ? withSuffix : `${metadataSourceRoot}/${withSuffix}` }
-  }
-  return { path: `${selectedDirectory}/${withSuffix}` }
-}
-
 async function promptForTemplateValues(
   contribution: MetadataTypeContribution,
   targetPath: string,
+  locale: string,
 ): Promise<MetadataFileTemplateValues | undefined> {
   const fields = contribution.fileTemplate?.fields ?? []
   if (fields.length === 0) {
@@ -316,7 +245,7 @@ async function promptForTemplateValues(
   const defaults = createMetadataFileTemplateDefaultValues(contribution, targetPath)
   const values: MetadataFileTemplateValues = {}
   for (const field of fields) {
-    const value = await promptForTemplateField(contribution, field, defaults[field.name])
+    const value = await promptForTemplateField(contribution, field, defaults[field.name], locale)
     if (value === undefined) {
       return undefined
     }
@@ -329,22 +258,25 @@ async function promptForTemplateField(
   contribution: MetadataTypeContribution,
   field: MetadataFileTemplateField,
   defaultValue: unknown,
+  locale: string,
 ): Promise<string | undefined> {
   const value = await vscode.window.showInputBox({
-    prompt: templateFieldPrompt(contribution, field),
+    prompt: metadataTemplateFieldPrompt(contribution, field, locale),
     value: defaultValue === undefined ? '' : String(defaultValue),
     ignoreFocusOut: true,
-    validateInput: (input) => field.required && input.trim() === '' ? `${field.label} is required.` : undefined,
+    validateInput: (input) => field.required && input.trim() === ''
+      ? text('metadata.error.fieldRequired', { label: field.label })
+      : undefined,
   })
   return value === undefined ? undefined : value.trim()
 }
 
-function templateFieldPrompt(
-  contribution: MetadataTypeContribution,
-  field: MetadataFileTemplateField,
-): string {
-  const title = `New ${contribution.displayName} ${field.label}`
-  return field.labelRemark ? `${title}\n${field.labelRemark}` : title
+function currentIdeLocale(): 'zh-CN' | 'en-US' {
+  return normalizeIdeLocale(vscode.env.language)
+}
+
+function text(key: string, data?: Record<string, unknown>): string {
+  return tideStackText(key, currentIdeLocale(), data)
 }
 
 async function fileExists(uri: vscode.Uri): Promise<boolean> {
@@ -357,10 +289,6 @@ function normalizePath(path: string): string {
 
 function trimSlashes(path: string): string {
   return path.replace(/^\/+/g, '').replace(/\/+$/g, '')
-}
-
-function basename(path: string): string {
-  return normalizePath(path).split('/').pop() ?? ''
 }
 
 function dirname(path: string): string | undefined {
@@ -397,7 +325,7 @@ async function configureTideStackDevelop(): Promise<void> {
   const localConfig = await readLocalConfig(workspaceFolder)
 
   const developmentServerUrl = await promptForValue(
-    'Development server URL',
+    text('settings.prompt.developmentServerUrl'),
     projectConfig.developmentServerUrl,
     'http://localhost:88',
   )
@@ -405,12 +333,12 @@ async function configureTideStackDevelop(): Promise<void> {
     return
   }
 
-  const appName = await promptForValue('Application name', projectConfig.appName)
+  const appName = await promptForValue(text('settings.prompt.appName'), projectConfig.appName)
   if (appName === undefined) {
     return
   }
 
-  const devKey = await promptForValue('Dev key from TideStack', localConfig.devKey, undefined, true)
+  const devKey = await promptForValue(text('settings.prompt.devKey'), localConfig.devKey, undefined, true)
   if (devKey === undefined) {
     return
   }
@@ -429,14 +357,17 @@ async function configureTideStackDevelop(): Promise<void> {
   })
 
   await vscode.window.showInformationMessage(
-    `TideStack Develop Config saved to ${currentDevelopConfigContract().project.path} and ${currentDevelopConfigContract().local.path}.`,
+    text('settings.savedMessage', {
+      projectPath: currentDevelopConfigContract().project.path,
+      localPath: currentDevelopConfigContract().local.path,
+    }),
   )
 }
 
 async function selectWorkspaceFolder(): Promise<vscode.WorkspaceFolder | undefined> {
   const workspaceFolders = vscode.workspace.workspaceFolders
   if (!workspaceFolders || workspaceFolders.length === 0) {
-    await vscode.window.showErrorMessage('Open a workspace before configuring TideStack Develop Config.')
+    await vscode.window.showErrorMessage(text('metadata.error.openWorkspace'))
     return undefined
   }
 
@@ -454,7 +385,7 @@ async function selectWorkspaceFolder(): Promise<vscode.WorkspaceFolder | undefin
 
   const selected = await vscode.window.showQuickPick(
     workspaceFolders.map((folder) => ({ label: folder.name, description: folder.uri.fsPath, folder })),
-    { placeHolder: 'Select the workspace for TideStack Develop Config' },
+    { placeHolder: text('metadata.new.selectWorkspace') },
   )
   return selected?.folder
 }
@@ -477,37 +408,28 @@ async function promptForValue(
 async function readProjectConfig(workspaceFolder: vscode.WorkspaceFolder): Promise<ProjectConfig> {
   const parsed = await readJsonObject(projectConfigUri(workspaceFolder))
   const legacyConfig = vscode.workspace.getConfiguration('tideStack.debug', workspaceFolder.uri)
-  return {
-    schemaVersion: readNumber(parsed, 'schemaVersion') || currentDevelopConfigContract().schemaVersion,
-    developmentServerUrl: readContractString(parsed, currentDevelopConfigContract().project, 'developmentServerUrl') || legacyConfig.get<string>('platformUrl') || '',
-    appName: readString(parsed, 'appName') || legacyConfig.get<string>('appName') || '',
-  }
+  return projectDevelopConfigFromDocument(parsed, currentDevelopConfigContract(), {
+    developmentServerUrl: legacyConfig.get<string>('platformUrl') || '',
+    appName: legacyConfig.get<string>('appName') || '',
+  })
 }
 
 async function readLocalConfig(workspaceFolder: vscode.WorkspaceFolder): Promise<LocalConfig> {
   const parsed = await readJsonObject(localConfigUri(workspaceFolder))
   const legacyConfig = vscode.workspace.getConfiguration('tideStack.debug', workspaceFolder.uri)
-  return {
-    schemaVersion: readNumber(parsed, 'schemaVersion') || currentDevelopConfigContract().schemaVersion,
-    devKey: readContractString(parsed, currentDevelopConfigContract().local, 'devKey') || legacyConfig.get<string>('devKey') || legacyConfig.get<string>('debugKey') || '',
-  }
+  return localDevelopConfigFromDocument(parsed, currentDevelopConfigContract(), {
+    devKey: legacyConfig.get<string>('devKey') || legacyConfig.get<string>('debugKey') || '',
+  })
 }
 
 async function writeProjectConfig(workspaceFolder: vscode.WorkspaceFolder, config: ProjectConfig): Promise<void> {
   const existing = await readJsonObject(projectConfigUri(workspaceFolder))
-  await writeJsonObject(projectConfigUri(workspaceFolder), orderContractFields(existing, {
-    schemaVersion: config.schemaVersion,
-    developmentServerUrl: config.developmentServerUrl,
-    appName: config.appName,
-  }, currentDevelopConfigContract().project))
+  await writeJsonObject(projectConfigUri(workspaceFolder), projectDevelopConfigDocument(existing, config, currentDevelopConfigContract()))
 }
 
 async function writeLocalConfig(workspaceFolder: vscode.WorkspaceFolder, config: LocalConfig): Promise<void> {
   const existing = await readJsonObject(localConfigUri(workspaceFolder))
-  await writeJsonObject(localConfigUri(workspaceFolder), orderContractFields(existing, {
-    schemaVersion: config.schemaVersion,
-    devKey: config.devKey,
-  }, currentDevelopConfigContract().local))
+  await writeJsonObject(localConfigUri(workspaceFolder), localDevelopConfigDocument(existing, config, currentDevelopConfigContract()))
 }
 
 async function readJsonObject(uri: vscode.Uri): Promise<JsonObject> {
@@ -533,52 +455,12 @@ async function writeJsonObject(uri: vscode.Uri, value: JsonObject): Promise<void
   await vscode.workspace.fs.writeFile(uri, Buffer.from(content, 'utf8'))
 }
 
-function orderContractFields(existing: JsonObject, knownFields: JsonObject, section: ConfigSectionContract): JsonObject {
-  const knownNames = new Set([
-    ...section.fields,
-    ...Object.values(section.legacyAliases).flat(),
-    ...(section.removedFields ?? []),
-  ])
-  const ordered: JsonObject = {}
-  for (const field of section.fields) {
-    if (field in knownFields) {
-      ordered[field] = knownFields[field]
-    }
-  }
-  for (const [key, value] of Object.entries(existing)) {
-    if (!knownNames.has(key)) {
-      ordered[key] = value
-    }
-  }
-  return ordered
-}
-
 function projectConfigUri(workspaceFolder: vscode.WorkspaceFolder): vscode.Uri {
   return vscode.Uri.joinPath(workspaceFolder.uri, ...currentDevelopConfigContract().project.path.split('/'))
 }
 
 function localConfigUri(workspaceFolder: vscode.WorkspaceFolder): vscode.Uri {
   return vscode.Uri.joinPath(workspaceFolder.uri, ...currentDevelopConfigContract().local.path.split('/'))
-}
-
-function readString(value: JsonObject, key: string): string {
-  const rawValue = value[key]
-  return typeof rawValue === 'string' ? rawValue : ''
-}
-
-function readNumber(value: JsonObject, key: string): number {
-  const rawValue = value[key]
-  return typeof rawValue === 'number' ? rawValue : 0
-}
-
-function readContractString(value: JsonObject, section: ConfigSectionContract, key: string): string {
-  for (const field of [key, ...(section.legacyAliases[key] ?? [])]) {
-    const result = readString(value, field)
-    if (result) {
-      return result
-    }
-  }
-  return ''
 }
 
 async function loadDevelopConfigContract(context: vscode.ExtensionContext): Promise<TideStackDevelopConfigContract> {
@@ -611,7 +493,7 @@ function currentDevelopConfigContract(): TideStackDevelopConfigContract {
   return developConfigContract
 }
 
-function isConfigSectionContract(value: unknown): value is ConfigSectionContract {
+function isConfigSectionContract(value: unknown): value is TideStackDevelopConfigSectionContract {
   return isJsonObject(value)
     && typeof value.path === 'string'
     && Array.isArray(value.fields)
