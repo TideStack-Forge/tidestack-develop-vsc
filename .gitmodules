@@ -1,0 +1,4 @@
+[submodule "common"]
+	path = common
+	url = git@github.com:TideStack-Forge/tidestack-develop-plugin-common.git
+	branch = master
