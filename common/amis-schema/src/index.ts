@@ -1,0 +1,52 @@
+export {
+  getContributionByPackagedPath,
+  getContributionBySuffix,
+  getContributionByType,
+  mapMetadataPackagedResourcePath,
+  mapMetadataSourcePath,
+  metadataTypeContributions,
+  normalizePath,
+} from './contributions'
+export { InMemoryMetadataFileBridge, createMetadataEditorHost } from './host'
+export { MetadataRevisionConflictError, metadataHostErrorCode } from './errors'
+export { createBrowserMetadataEditorHost } from './browserHost'
+export { createMetadataEditorState, createMetadataEditorStateFromDocument } from './state'
+export {
+  applyMetadataFileTemplateValues,
+  createMetadataFileTemplateDefaultValues,
+  parseMetadataJson,
+  serializeMetadataDocument,
+  serializeMetadataFileTemplate,
+} from './serializer'
+export type { MetadataFileTemplateValues } from './serializer'
+export { getPureSchema } from './pureSchema'
+export {
+  createMetadataEditorWebviewHtml,
+  metadataEditorRuntimeFileName,
+  metadataEditorWebviewTemplateFileName,
+} from './webRuntime'
+export type { MetadataEditorWebviewHtmlOptions } from './webRuntime'
+export type {
+  Disposable,
+  MetadataDiagnostic,
+  MetadataDiagnosticSeverity,
+  MetadataEditorContext,
+  MetadataEditorDocumentBridge,
+  MetadataEditorDocument,
+  MetadataEditorHost,
+  MetadataEditorKind,
+  MetadataEditorRuntimeConfig,
+  MetadataEditorState,
+  MetadataDocumentShape,
+  MetadataFileTemplate,
+  MetadataFileTemplateField,
+  MetadataFileTemplateFieldDefault,
+  MetadataFileChange,
+  MetadataFileRef,
+  MetadataIdeFileBridge,
+  MetadataPathMapping,
+  MetadataReference,
+  MetadataReferenceTarget,
+  MetadataTypeContribution,
+  MetadataValidationContext,
+} from './types'

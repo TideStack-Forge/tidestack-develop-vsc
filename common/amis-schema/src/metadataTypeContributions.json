@@ -1,0 +1,518 @@
+{
+  "types": [
+    {
+      "type": "authority",
+      "fileSuffix": ".authority.json",
+      "displayName": "权限项模型",
+      "sourcePathPatterns": ["src/main/metadata/**/*.authority.json"],
+      "packagedPathPrefix": "META-INF/ouroboros/authority",
+      "editorKinds": ["form", "table"],
+      "fileTemplate": {
+        "defaultFileName": "example.authority.json",
+        "fields": [
+          { "name": "fullName", "label": "完整名称", "documentPath": ["fullName"], "required": true, "defaultFromPath": "camel-name" },
+          { "name": "title", "label": "标题", "documentPath": ["title"], "required": true, "defaultFromPath": "title" }
+        ],
+        "document": {
+          "fullName": "example.authority",
+          "title": "示例权限项",
+          "apis": [],
+          "uiViews": [],
+          "menuItems": [],
+          "order": 0
+        }
+      },
+      "jsonSchema": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["fullName", "title"],
+        "properties": {
+          "fullName": { "type": "string" },
+          "title": { "type": "string" },
+          "apis": { "type": "array", "items": { "type": "string" } },
+          "uiViews": { "type": "array", "items": { "type": "string" } },
+          "menuItems": { "type": "array", "items": { "type": "string" } },
+          "order": { "type": "integer" }
+        }
+      },
+      "editorSchema": {
+        "type": "form",
+        "title": "权限项模型",
+        "actions": [],
+        "body": [
+          { "type": "input-text", "name": "fullName", "label": "完整名称", "required": true },
+          { "type": "input-text", "name": "title", "label": "标题", "required": true },
+          { "type": "input-number", "name": "order", "label": "排序" },
+          { "type": "input-array", "name": "apis", "label": "关联接口", "items": { "type": "input-text", "name": "api", "label": "接口" } },
+          { "type": "input-array", "name": "uiViews", "label": "关联界面", "items": { "type": "input-text", "name": "uiView", "label": "界面" } },
+          { "type": "input-array", "name": "menuItems", "label": "关联菜单", "items": { "type": "input-text", "name": "menuItem", "label": "菜单项" } }
+        ]
+      }
+    },
+    {
+      "type": "menu",
+      "fileSuffix": ".menu.json",
+      "displayName": "菜单模型",
+      "sourcePathPatterns": ["src/main/metadata/**/*.menu.json"],
+      "packagedPathPrefix": "META-INF/ouroboros/menu-model",
+      "editorKinds": ["form"],
+      "fileTemplate": {
+        "defaultFileName": "example.menu.json",
+        "fields": [
+          { "name": "fullName", "label": "完整名称", "documentPath": ["fullName"], "required": true, "defaultFromPath": "camel-name" },
+          { "name": "title", "label": "标题", "documentPath": ["title"], "required": true, "defaultFromPath": "title" },
+          { "name": "url", "label": "访问路径", "documentPath": ["url"], "defaultFromPath": "slash-path" }
+        ],
+        "document": {
+          "fullName": "example.menu",
+          "title": "示例菜单",
+          "url": "/example",
+          "icon": "fa fa-circle",
+          "placement": "main",
+          "showMode": "tab",
+          "order": 0
+        }
+      },
+      "jsonSchema": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["fullName", "title"],
+        "properties": {
+          "fullName": { "type": "string" },
+          "title": { "type": "string" },
+          "url": { "type": "string" },
+          "icon": { "type": "string" },
+          "placement": { "type": "string", "enum": ["main", "secondary", "all"] },
+          "showMode": { "type": "string", "enum": ["tab", "fullScreen", "newWindow"] },
+          "order": { "type": "integer" }
+        }
+      },
+      "editorSchema": {
+        "type": "form",
+        "title": "菜单模型",
+        "actions": [],
+        "body": [
+          { "type": "input-text", "name": "fullName", "label": "完整名称", "required": true },
+          { "type": "input-text", "name": "title", "label": "标题", "required": true },
+          { "type": "input-text", "name": "url", "label": "访问路径" },
+          { "type": "input-text", "name": "icon", "label": "图标" },
+          { "type": "select", "name": "placement", "label": "位置", "options": [{ "label": "主区域", "value": "main" }, { "label": "次级区域", "value": "secondary" }, { "label": "全部", "value": "all" }] },
+          { "type": "select", "name": "showMode", "label": "显示方式", "options": [{ "label": "标签页", "value": "tab" }, { "label": "全屏", "value": "fullScreen" }, { "label": "新窗口", "value": "newWindow" }] },
+          { "type": "input-number", "name": "order", "label": "排序" }
+        ]
+      }
+    },
+    {
+      "type": "dev-menu",
+      "fileSuffix": ".dev-menu.json",
+      "displayName": "开发菜单模型",
+      "sourcePathPatterns": ["src/main/metadata/**/*.dev-menu.json"],
+      "packagedPathPrefix": "META-INF/ouroboros/dev-menu-model",
+      "editorKinds": ["form"],
+      "fileTemplate": {
+        "defaultFileName": "example.dev-menu.json",
+        "fields": [
+          { "name": "fullName", "label": "完整名称", "documentPath": ["fullName"], "required": true, "defaultFromPath": "dot-name" },
+          { "name": "title", "label": "标题", "documentPath": ["title"], "required": true, "defaultFromPath": "title" },
+          { "name": "url", "label": "访问路径", "documentPath": ["url"], "defaultFromPath": "slash-path" }
+        ],
+        "document": {
+          "fullName": "AllModels.Example",
+          "title": "示例开发菜单",
+          "url": "/dev/{appName}/example",
+          "icon": "fa fa-circle",
+          "placement": "main",
+          "stage": "dev",
+          "showMode": "tab",
+          "order": 0
+        }
+      },
+      "jsonSchema": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["fullName", "title"],
+        "properties": {
+          "fullName": { "type": "string" },
+          "title": { "type": "string" },
+          "url": { "type": "string" },
+          "icon": { "type": "string" },
+          "placement": { "type": "string", "enum": ["main", "secondary", "all"] },
+          "stage": { "type": "string", "enum": ["welcome", "dev", "all"] },
+          "showMode": { "type": "string", "enum": ["tab", "fullScreen", "newWindow"] },
+          "order": { "type": "integer" },
+          "children": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true,
+              "required": ["fullName", "title"],
+              "properties": {
+                "fullName": { "type": "string" },
+                "title": { "type": "string" },
+                "url": { "type": "string" },
+                "placement": { "type": "string", "enum": ["main", "secondary", "all"] },
+                "stage": { "type": "string", "enum": ["welcome", "dev", "all"] },
+                "order": { "type": "integer" }
+              }
+            }
+          }
+        }
+      },
+      "editorSchema": {
+        "type": "form",
+        "title": "开发菜单模型",
+        "actions": [],
+        "body": [
+          { "type": "input-text", "name": "fullName", "label": "完整名称", "required": true },
+          { "type": "input-text", "name": "title", "label": "标题", "required": true },
+          { "type": "input-text", "name": "url", "label": "访问路径" },
+          { "type": "input-text", "name": "icon", "label": "图标" },
+          { "type": "select", "name": "placement", "label": "位置", "options": [{ "label": "主区域", "value": "main" }, { "label": "次级区域", "value": "secondary" }, { "label": "全部", "value": "all" }] },
+          { "type": "select", "name": "stage", "label": "阶段", "options": [{ "label": "欢迎页", "value": "welcome" }, { "label": "开发", "value": "dev" }, { "label": "全部", "value": "all" }] },
+          { "type": "select", "name": "showMode", "label": "显示方式", "options": [{ "label": "标签页", "value": "tab" }, { "label": "全屏", "value": "fullScreen" }, { "label": "新窗口", "value": "newWindow" }] },
+          { "type": "input-number", "name": "order", "label": "排序" }
+        ]
+      }
+    },
+    {
+      "type": "ui-model",
+      "fileSuffix": ".ui-model.json",
+      "displayName": "UI 模型",
+      "sourcePathPatterns": ["src/main/metadata/**/*.ui-model.json"],
+      "packagedPathPrefix": "META-INF/ouroboros/ui-model",
+      "editorKinds": ["form"],
+      "fileTemplate": {
+        "defaultFileName": "example.ui-model.json",
+        "fields": [
+          { "name": "path", "label": "UI 路径", "documentPath": ["path"], "required": true, "defaultFromPath": "slash-path" },
+          { "name": "title", "label": "标题", "documentPath": ["title"], "required": true, "defaultFromPath": "title" },
+          { "name": "description", "label": "描述", "documentPath": ["description"] }
+        ],
+        "document": {
+          "path": "/example",
+          "type": "amis",
+          "title": "示例页面",
+          "icon": "fa fa-file",
+          "description": "示例 UI 模型"
+        }
+      },
+      "jsonSchema": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["path", "type", "title"],
+        "properties": {
+          "path": { "type": "string" },
+          "type": { "type": "string" },
+          "title": { "type": "string" },
+          "icon": { "type": "string" },
+          "description": { "type": "string" }
+        }
+      },
+      "editorSchema": {
+        "type": "form",
+        "title": "UI 模型",
+        "actions": [],
+        "body": [
+          { "type": "input-text", "name": "path", "label": "UI 路径", "required": true },
+          { "type": "input-text", "name": "type", "label": "渲染类型", "required": true },
+          { "type": "input-text", "name": "title", "label": "中文标题", "required": true },
+          { "type": "input-text", "name": "icon", "label": "图标" },
+          { "type": "textarea", "name": "description", "label": "描述", "minRows": 3 }
+        ]
+      }
+    },
+    {
+      "type": "ui-schema",
+      "fileSuffix": ".ui-schema.json",
+      "displayName": "UI Schema",
+      "sourcePathPatterns": ["src/main/metadata/**/*.ui-schema.json"],
+      "packagedPathPrefix": "META-INF/ouroboros/ui-schema",
+      "editorKind": "amis-editor",
+      "editorKinds": ["amis-editor"],
+      "fileTemplate": {
+        "defaultFileName": "example.ui-schema.json",
+        "fields": [
+          { "name": "name", "label": "名称", "labelRemark": "按低代码页面命名习惯填写点分名称，例如 Admin.UserList；系统运行时会映射成 /admin/user-list。", "documentPath": ["name"], "required": true, "defaultFromPath": "dot-name" },
+          { "name": "title", "label": "标题", "documentPath": ["title"], "required": true, "defaultFromPath": "title" },
+          { "name": "description", "label": "描述", "documentPath": ["description"] }
+        ],
+        "document": {
+          "name": "Example",
+          "title": "示例页面",
+          "description": "示例 UI Schema",
+          "schema": {
+            "type": "page",
+            "body": []
+          }
+        }
+      },
+      "jsonSchema": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "name": { "type": "string" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "schema": { "type": "object" },
+          "type": { "type": "string" },
+          "id": { "type": "string" },
+          "className": { "type": "string" },
+          "visible": { "type": "boolean" },
+          "hidden": { "type": "boolean" },
+          "visibleOn": { "type": "string" },
+          "hiddenOn": { "type": "string" }
+        }
+      },
+      "editorSchema": {
+        "type": "form",
+        "title": "UI Schema",
+        "actions": [],
+        "body": [
+          { "type": "input-text", "name": "type", "label": "组件类型", "required": true },
+          { "type": "input-text", "name": "name", "label": "字段名称" },
+          { "type": "input-text", "name": "id", "label": "组件 ID" },
+          { "type": "input-text", "name": "title", "label": "中文标题" },
+          { "type": "input-text", "name": "className", "label": "样式类名" },
+          { "type": "switch", "name": "visible", "label": "可见" },
+          { "type": "switch", "name": "hidden", "label": "隐藏" },
+          { "type": "input-text", "name": "visibleOn", "label": "显示条件" },
+          { "type": "input-text", "name": "hiddenOn", "label": "隐藏条件" },
+          { "type": "json-editor", "name": "body", "label": "主体内容", "allowClear": true },
+          { "type": "json-editor", "name": "actions", "label": "动作配置", "allowClear": true },
+          { "type": "json-editor", "name": "data", "label": "数据配置", "allowClear": true },
+          { "type": "json-editor", "name": "api", "label": "提交接口", "allowClear": true },
+          { "type": "json-editor", "name": "initApi", "label": "初始化接口", "allowClear": true },
+          { "type": "json-editor", "name": "onEvent", "label": "事件配置", "allowClear": true }
+        ]
+      }
+    },
+    {
+      "type": "app-module",
+      "fixedFileName": "app-modules.json",
+      "displayName": "应用模块",
+      "sourcePathPatterns": ["src/main/metadata/app-modules.json"],
+      "packagedPathPrefix": "META-INF/ouroboros/app-module",
+      "packagedPathPatterns": ["app-modules.json"],
+      "documentShape": "array",
+      "editorKinds": ["form", "table"],
+      "fileTemplate": {
+        "defaultFileName": "app-modules.json",
+        "fields": [
+          { "name": "fullName", "label": "模块全名", "documentPath": ["0", "fullName"], "required": true },
+          { "name": "title", "label": "标题", "documentPath": ["0", "title"], "required": true },
+          { "name": "description", "label": "描述", "documentPath": ["0", "description"] }
+        ],
+        "document": [
+          {
+            "fullName": "example",
+            "title": "示例应用模块",
+            "description": "示例应用模块",
+            "icon": "fa fa-cube",
+            "order": 0,
+            "menu": "example.menu",
+            "subMenus": [],
+            "authorities": []
+          }
+        ]
+      },
+      "jsonSchema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["fullName", "title"],
+          "properties": {
+            "fullName": { "type": "string" },
+            "title": { "type": "string" },
+            "description": { "type": "string" },
+            "icon": { "type": "string" },
+            "order": { "type": "integer" },
+            "menu": { "type": "string" },
+            "subMenus": { "type": "array", "items": { "type": "string" } },
+            "authorities": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      },
+      "editorSchema": {
+        "type": "form",
+        "title": "应用模块",
+        "documentShape": "array",
+        "actions": [],
+        "body": [
+          {
+            "type": "combo",
+            "name": "items",
+            "label": "应用模块列表",
+            "multiple": true,
+            "multiLine": true,
+            "draggable": true,
+            "addButtonText": "新增应用模块",
+            "items": [
+              { "type": "input-text", "name": "fullName", "label": "模块全名", "required": true },
+              { "type": "input-text", "name": "title", "label": "中文标题", "required": true },
+              { "type": "textarea", "name": "description", "label": "描述", "minRows": 2 },
+              { "type": "input-text", "name": "icon", "label": "图标" },
+              { "type": "input-number", "name": "order", "label": "排序" },
+              { "type": "input-text", "name": "menu", "label": "关联菜单" },
+              { "type": "input-array", "name": "subMenus", "label": "子菜单", "items": [{ "type": "input-text", "placeholder": "菜单全名" }] },
+              { "type": "input-array", "name": "authorities", "label": "权限项", "items": [{ "type": "input-text", "placeholder": "权限全名" }] }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "configuration",
+      "fixedFileName": "configuration.json",
+      "displayName": "配置项",
+      "sourcePathPatterns": ["src/main/metadata/configuration.json"],
+      "packagedPathPrefix": "META-INF/ouroboros/configuration",
+      "packagedPathPatterns": ["configuration.json"],
+      "documentShape": "array",
+      "editorKinds": ["form", "table"],
+      "fileTemplate": {
+        "defaultFileName": "configuration.json",
+        "fields": [
+          { "name": "key", "label": "配置键", "documentPath": ["0", "key"], "required": true },
+          { "name": "label", "label": "标签", "documentPath": ["0", "label"], "required": true },
+          { "name": "description", "label": "描述", "documentPath": ["0", "description"] }
+        ],
+        "document": [
+          {
+            "key": "example.enabled",
+            "label": "启用示例功能",
+            "description": "示例配置项",
+            "modifiable": true,
+            "nullable": false,
+            "valueType": "boolean",
+            "defaultValue": "false",
+            "groupPath": "example",
+            "order": 0,
+            "scope": "backend"
+          }
+        ]
+      },
+      "jsonSchema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["key", "label", "valueType"],
+          "properties": {
+            "key": { "type": "string" },
+            "label": { "type": "string" },
+            "description": { "type": "string" },
+            "modifiable": { "type": "boolean" },
+            "nullable": { "type": "boolean" },
+            "valueType": { "type": "string", "enum": ["int", "long", "float", "double", "boolean", "string", "object", "map", "list", "array"] },
+            "defaultValue": { "type": "string" },
+            "groupPath": { "type": "string" },
+            "order": { "type": "integer" },
+            "scope": { "type": "string", "enum": ["frontend", "backend"] },
+            "obsolete": { "type": "boolean" },
+            "obsoleteCause": { "type": "string" },
+            "editorSchema": { "type": "object" }
+          }
+        }
+      },
+      "editorSchema": {
+        "type": "form",
+        "title": "配置项",
+        "documentShape": "array",
+        "actions": [],
+        "body": [
+          {
+            "type": "combo",
+            "name": "items",
+            "label": "配置项列表",
+            "multiple": true,
+            "multiLine": true,
+            "draggable": true,
+            "addButtonText": "新增配置项",
+            "items": [
+              { "type": "input-text", "name": "key", "label": "配置键", "required": true },
+              { "type": "input-text", "name": "label", "label": "中文标签", "required": true },
+              { "type": "textarea", "name": "description", "label": "描述", "minRows": 2 },
+              { "type": "switch", "name": "modifiable", "label": "允许修改" },
+              { "type": "switch", "name": "nullable", "label": "允许为空" },
+              { "type": "select", "name": "valueType", "label": "值类型", "required": true, "options": [{ "label": "整数", "value": "int" }, { "label": "长整数", "value": "long" }, { "label": "单精度小数", "value": "float" }, { "label": "双精度小数", "value": "double" }, { "label": "布尔", "value": "boolean" }, { "label": "字符串", "value": "string" }, { "label": "对象", "value": "object" }, { "label": "映射", "value": "map" }, { "label": "列表", "value": "list" }, { "label": "数组", "value": "array" }] },
+              { "type": "input-text", "name": "defaultValue", "label": "默认值" },
+              { "type": "input-text", "name": "groupPath", "label": "配置分组路径" },
+              { "type": "input-number", "name": "order", "label": "排序" },
+              { "type": "select", "name": "scope", "label": "作用范围", "options": [{ "label": "后端", "value": "backend" }, { "label": "前端", "value": "frontend" }] },
+              { "type": "switch", "name": "obsolete", "label": "已废弃" },
+              { "type": "input-text", "name": "obsoleteCause", "label": "废弃原因" },
+              { "type": "json-editor", "name": "editorSchema", "label": "编辑器 Schema", "allowClear": true }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "configuration-group",
+      "fixedFileName": "configuration-groups.json",
+      "displayName": "配置分组",
+      "sourcePathPatterns": ["src/main/metadata/configuration-groups.json"],
+      "packagedPathPrefix": "META-INF/ouroboros/configuration-group",
+      "packagedPathPatterns": ["configuration-groups.json"],
+      "documentShape": "array",
+      "editorKinds": ["form", "table"],
+      "fileTemplate": {
+        "defaultFileName": "configuration-groups.json",
+        "fields": [
+          { "name": "path", "label": "分组路径", "documentPath": ["0", "path"], "required": true },
+          { "name": "title", "label": "标题", "documentPath": ["0", "title"], "required": true },
+          { "name": "description", "label": "描述", "documentPath": ["0", "description"] }
+        ],
+        "document": [
+          {
+            "path": "example",
+            "title": "示例配置分组",
+            "icon": "fa fa-folder",
+            "order": 0,
+            "description": "示例配置分组"
+          }
+        ]
+      },
+      "jsonSchema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["path", "title"],
+          "properties": {
+            "path": { "type": "string" },
+            "title": { "type": "string" },
+            "icon": { "type": "string" },
+            "order": { "type": "integer" },
+            "description": { "type": "string" }
+          }
+        }
+      },
+      "editorSchema": {
+        "type": "form",
+        "title": "配置分组",
+        "documentShape": "array",
+        "actions": [],
+        "body": [
+          {
+            "type": "combo",
+            "name": "items",
+            "label": "配置分组列表",
+            "multiple": true,
+            "multiLine": true,
+            "draggable": true,
+            "addButtonText": "新增配置分组",
+            "items": [
+              { "type": "input-text", "name": "path", "label": "分组路径", "required": true },
+              { "type": "input-text", "name": "title", "label": "中文标题", "required": true },
+              { "type": "input-text", "name": "icon", "label": "图标" },
+              { "type": "input-number", "name": "order", "label": "排序" },
+              { "type": "textarea", "name": "description", "label": "描述", "minRows": 2 }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

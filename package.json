@@ -1,0 +1,272 @@
+{
+  "name": "develop",
+  "displayName": "TideStack Develop",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs",
+  "icon": "images/icon.png",
+  "publisher": "TideStackForge",
+  "author": "TideStack",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": [
+    "onCustomEditor:tidestack.metadataEditor.authority",
+    "onCustomEditor:tidestack.metadataEditor.menu",
+    "onCustomEditor:tidestack.metadataEditor.devMenu",
+    "onCustomEditor:tidestack.metadataEditor.uiModel",
+    "onCustomEditor:tidestack.metadataEditor.uiSchema",
+    "onCustomEditor:tidestack.metadataEditor.appModule",
+    "onCustomEditor:tidestack.metadataEditor.configuration",
+    "onCustomEditor:tidestack.metadataEditor.configurationGroup",
+    "onCommand:tidestack.develop.configure",
+    "onCommand:tidestack.develop.openConfig",
+    "onCommand:tidestack.metadata.newFile",
+    "onCommand:tidestack.metadata.newAuthorityFile",
+    "onCommand:tidestack.metadata.newMenuFile",
+    "onCommand:tidestack.metadata.newDevMenuFile",
+    "onCommand:tidestack.metadata.newUiModelFile",
+    "onCommand:tidestack.metadata.newUiSchemaFile",
+    "onCommand:tidestack.metadata.newAppModuleFile",
+    "onCommand:tidestack.metadata.newConfigurationFile",
+    "onCommand:tidestack.metadata.newConfigurationGroupFile",
+    "onCommand:tidestack.metadata.openSource",
+    "onCommand:tidestack.metadata.openVisual"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "tidestack.develop.configure",
+        "title": "TideStack Develop Config: Configure Project"
+      },
+      {
+        "command": "tidestack.develop.openConfig",
+        "title": "TideStack Develop Config: Open Config Files"
+      },
+      {
+        "command": "tidestack.metadata.newFile",
+        "title": "TideStack Metadata: New File"
+      },
+      {
+        "command": "tidestack.metadata.newAuthorityFile",
+        "title": "权限项模型..."
+      },
+      {
+        "command": "tidestack.metadata.newMenuFile",
+        "title": "菜单模型..."
+      },
+      {
+        "command": "tidestack.metadata.newDevMenuFile",
+        "title": "开发菜单模型..."
+      },
+      {
+        "command": "tidestack.metadata.newUiModelFile",
+        "title": "UI 模型..."
+      },
+      {
+        "command": "tidestack.metadata.newUiSchemaFile",
+        "title": "UI Schema..."
+      },
+      {
+        "command": "tidestack.metadata.newAppModuleFile",
+        "title": "应用模块..."
+      },
+      {
+        "command": "tidestack.metadata.newConfigurationFile",
+        "title": "配置项..."
+      },
+      {
+        "command": "tidestack.metadata.newConfigurationGroupFile",
+        "title": "配置分组..."
+      },
+      {
+        "command": "tidestack.metadata.openSource",
+        "title": "Source Editor"
+      },
+      {
+        "command": "tidestack.metadata.openVisual",
+        "title": "Visual Editor"
+      }
+    ],
+    "submenus": [
+      {
+        "id": "tidestack.metadata.newFileSubmenu",
+        "label": "创建 TideStack Metadata"
+      }
+    ],
+    "menus": {
+      "file/newFile": [
+        {
+          "submenu": "tidestack.metadata.newFileSubmenu",
+          "group": "tidestack@1"
+        }
+      ],
+      "tidestack.metadata.newFileSubmenu": [
+        {
+          "command": "tidestack.metadata.newAuthorityFile",
+          "group": "types@1"
+        },
+        {
+          "command": "tidestack.metadata.newMenuFile",
+          "group": "types@2"
+        },
+        {
+          "command": "tidestack.metadata.newDevMenuFile",
+          "group": "types@3"
+        },
+        {
+          "command": "tidestack.metadata.newUiModelFile",
+          "group": "types@4"
+        },
+        {
+          "command": "tidestack.metadata.newUiSchemaFile",
+          "group": "types@5"
+        },
+        {
+          "command": "tidestack.metadata.newAppModuleFile",
+          "group": "types@6"
+        },
+        {
+          "command": "tidestack.metadata.newConfigurationFile",
+          "group": "types@7"
+        },
+        {
+          "command": "tidestack.metadata.newConfigurationGroupFile",
+          "group": "types@8"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "tidestack.metadata.openSource",
+          "when": "activeCustomEditorId == tidestack.metadataEditor.authority || activeCustomEditorId == tidestack.metadataEditor.menu || activeCustomEditorId == tidestack.metadataEditor.devMenu || activeCustomEditorId == tidestack.metadataEditor.uiModel || activeCustomEditorId == tidestack.metadataEditor.uiSchema || activeCustomEditorId == tidestack.metadataEditor.appModule || activeCustomEditorId == tidestack.metadataEditor.configuration || activeCustomEditorId == tidestack.metadataEditor.configurationGroup",
+          "group": "navigation@10"
+        },
+        {
+          "command": "tidestack.metadata.openVisual",
+          "when": "editorLangId == json",
+          "group": "navigation@11"
+        }
+      ],
+      "explorer/context": [
+        {
+          "submenu": "tidestack.metadata.newFileSubmenu",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation@19"
+        },
+        {
+          "command": "tidestack.metadata.openVisual",
+          "when": "resourceExtname == .json",
+          "group": "navigation@20"
+        }
+      ]
+    },
+    "customEditors": [
+      {
+        "viewType": "tidestack.metadataEditor.authority",
+        "displayName": "TideStack Authority Metadata Editor",
+        "selector": [
+          {
+            "filenamePattern": "*.authority.json"
+          },
+          {
+            "filenamePattern": "**/resources/META-INF/ouroboros/authority/**/*.json"
+          }
+        ],
+        "priority": "default"
+      },
+      {
+        "viewType": "tidestack.metadataEditor.menu",
+        "displayName": "TideStack Menu Metadata Editor",
+        "selector": [
+          {
+            "filenamePattern": "*.menu.json"
+          },
+          {
+            "filenamePattern": "**/resources/META-INF/ouroboros/menu-model/**/*.json"
+          }
+        ],
+        "priority": "default"
+      },
+      {
+        "viewType": "tidestack.metadataEditor.devMenu",
+        "displayName": "TideStack Dev Menu Metadata Editor",
+        "selector": [
+          {
+            "filenamePattern": "*.dev-menu.json"
+          },
+          {
+            "filenamePattern": "**/resources/META-INF/ouroboros/dev-menu-model/**/*.json"
+          }
+        ],
+        "priority": "default"
+      },
+      {
+        "viewType": "tidestack.metadataEditor.uiModel",
+        "displayName": "TideStack UI Model Metadata Editor",
+        "selector": [
+          { "filenamePattern": "*.ui-model.json" },
+          { "filenamePattern": "**/resources/META-INF/ouroboros/ui-model/**/*.json" }
+        ],
+        "priority": "default"
+      },
+      {
+        "viewType": "tidestack.metadataEditor.uiSchema",
+        "displayName": "TideStack UI Schema Metadata Editor",
+        "selector": [
+          { "filenamePattern": "*.ui-schema.json" },
+          { "filenamePattern": "**/resources/META-INF/ouroboros/ui-schema/**/*.json" }
+        ],
+        "priority": "default"
+      },
+      {
+        "viewType": "tidestack.metadataEditor.appModule",
+        "displayName": "TideStack App Module Metadata Editor",
+        "selector": [
+          { "filenamePattern": "**/src/main/metadata/app-modules.json" },
+          { "filenamePattern": "**/resources/META-INF/ouroboros/metadata/app-modules.json" },
+          { "filenamePattern": "**/resources/META-INF/ouroboros/app-modules.json" }
+        ],
+        "priority": "default"
+      },
+      {
+        "viewType": "tidestack.metadataEditor.configuration",
+        "displayName": "TideStack Configuration Metadata Editor",
+        "selector": [
+          { "filenamePattern": "**/src/main/metadata/configuration.json" },
+          { "filenamePattern": "**/resources/META-INF/ouroboros/metadata/configuration.json" },
+          { "filenamePattern": "**/resources/META-INF/ouroboros/configuration.json" }
+        ],
+        "priority": "default"
+      },
+      {
+        "viewType": "tidestack.metadataEditor.configurationGroup",
+        "displayName": "TideStack Configuration Group Metadata Editor",
+        "selector": [
+          { "filenamePattern": "**/src/main/metadata/configuration-groups.json" },
+          { "filenamePattern": "**/resources/META-INF/ouroboros/metadata/configuration-groups.json" },
+          { "filenamePattern": "**/resources/META-INF/ouroboros/configuration-groups.json" }
+        ],
+        "priority": "default"
+      }
+    ]
+  },
+  "scripts": {
+    "build:shared": "node scripts/verify-shared-assets.mjs",
+    "vendor:shared": "node scripts/vendor-shared-package.mjs",
+    "copy:webview-assets": "node scripts/copy-webview-assets.mjs",
+    "verify:webview-assets": "node scripts/verify-webview-assets.mjs",
+    "verify:vsix-assets": "node scripts/verify-vsix-assets.mjs",
+    "compile": "npm run build:shared && tsc -p . && npm run vendor:shared && npm run copy:webview-assets && npm run verify:webview-assets",
+    "package:vsix": "npm run compile && npm exec --yes @vscode/vsce -- package --no-dependencies --allow-missing-repository --skip-license && npm run verify:vsix-assets"
+  },
+  "dependencies": {
+    "ouroboros-metadata-editor": "file:./common/amis-schema"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "@types/vscode": "^1.90.0",
+    "typescript": "^5.8.3"
+  }
+}

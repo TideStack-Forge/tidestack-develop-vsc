@@ -1,0 +1,9 @@
+.DS_Store
+/node_modules/
+/dist/
+/*.vsix
+*.log
+
+common/amis-schema/node_modules/
+!common/amis-schema/dist/
+!common/amis-schema/dist/**
