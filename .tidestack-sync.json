@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "managedBy": "scripts/open-source/sync-ide-plugins.mjs",
+  "sourceRepository": "ouroboros",
+  "sourceCommit": "82bccfc47d43aadbf652ae9bf5b9e3b32c2837d3",
+  "sourceManagedContentHash": "39352b4186b402b5b08882d7c7b5ce2b4e1222d6f0d7474e9cdc4c23e9c2cca3",
+  "targetRepository": "vscode",
+  "managedPaths": [
+    "images",
+    "package.json",
+    "scripts",
+    "src",
+    "tsconfig.json"
+  ],
+  "submodules": {
+    "common": "263fafa237dc05a181643e082465a193f03bf429"
+  }
+}

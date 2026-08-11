@@ -1,14 +1,11 @@
-import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const pluginRoot = dirname(dirname(fileURLToPath(import.meta.url)))
-const sharedDist = join(pluginRoot, 'common', 'amis-schema', 'dist')
+const sharedDist = join(pluginRoot, 'common', 'metadata-editor-runtime', 'dist')
 const vendorRoot = join(pluginRoot, 'dist', 'vendor', 'ouroboros-metadata-editor')
-const compiledFiles = [
-  join(pluginRoot, 'dist', 'extension.js'),
-  join(pluginRoot, 'dist', 'metadataCustomEditor.js'),
-]
+const compiledFiles = listJavaScriptFiles(join(pluginRoot, 'dist'))
 
 if (!existsSync(join(sharedDist, 'index.js'))) {
   throw new Error(`Missing built shared metadata editor package: ${sharedDist}`)
@@ -30,4 +27,18 @@ for (const file of compiledFiles) {
     .replaceAll('require("ouroboros-metadata-editor")', 'require("./vendor/ouroboros-metadata-editor")')
     .replaceAll("require('ouroboros-metadata-editor')", "require('./vendor/ouroboros-metadata-editor')")
   writeFileSync(file, next)
+}
+
+function listJavaScriptFiles(root) {
+  if (!existsSync(root)) {
+    return []
+  }
+  return readdirSync(root).flatMap((name) => {
+    const absolutePath = join(root, name)
+    const stat = statSync(absolutePath)
+    if (stat.isDirectory()) {
+      return name === 'vendor' ? [] : listJavaScriptFiles(absolutePath)
+    }
+    return name.endsWith('.js') ? [absolutePath] : []
+  })
 }

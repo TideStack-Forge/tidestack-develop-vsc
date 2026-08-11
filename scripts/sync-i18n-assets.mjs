@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const pluginRoot = dirname(dirname(fileURLToPath(import.meta.url)))
-const sharedI18nRoot = join(pluginRoot, 'common', 'amis-schema', 'src', 'i18n')
+const sharedI18nRoot = join(pluginRoot, 'common', 'metadata-editor-schema', 'dist', 'i18n')
 const distI18nRoot = join(pluginRoot, 'dist', 'i18n')
 
 const enUs = join(sharedI18nRoot, 'en-US.json')

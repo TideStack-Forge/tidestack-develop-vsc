@@ -5,12 +5,14 @@ import { fileURLToPath } from 'node:url'
 const pluginRoot = dirname(dirname(fileURLToPath(import.meta.url)))
 
 const required = [
-  join(pluginRoot, 'common', 'amis-schema', 'dist', 'index.js'),
-  join(pluginRoot, 'common', 'amis-schema', 'dist', 'browser', 'metadata-editor-host.js'),
-  join(pluginRoot, 'common', 'amis-schema', 'runtime', 'metadata-editor-runtime.js'),
-  join(pluginRoot, 'common', 'amis-schema', 'runtime', 'metadata-editor-webview.html'),
-  join(pluginRoot, 'common', 'amis-schema', 'runtime', 'metadata-editor-amis-editor.js'),
-  join(pluginRoot, 'common', 'amis-schema', 'runtime', 'metadata-editor-amis-editor.css'),
+  join(pluginRoot, 'common', 'metadata-editor-runtime', 'dist', 'index.js'),
+  join(pluginRoot, 'common', 'metadata-editor-schema', 'dist', 'metadataTypeContributions.json'),
+  join(pluginRoot, 'common', 'metadata-editor-schema', 'dist', 'metadataEditorRegistrations.json'),
+  join(pluginRoot, 'common', 'metadata-editor-runtime', 'dist', 'browser', 'metadata-editor-host.js'),
+  join(pluginRoot, 'common', 'metadata-editor-runtime', 'runtime', 'metadata-editor-runtime.js'),
+  join(pluginRoot, 'common', 'metadata-editor-runtime', 'runtime', 'metadata-editor-webview.html'),
+  join(pluginRoot, 'common', 'metadata-editor-runtime', 'runtime', 'metadata-editor-amis-editor.js'),
+  join(pluginRoot, 'common', 'metadata-editor-runtime', 'runtime', 'metadata-editor-amis-editor.css'),
   join(pluginRoot, 'common', 'contracts', 'tidestack-develop-config.json'),
   join(pluginRoot, 'common', 'amis-sdk', 'sdk.js'),
   join(pluginRoot, 'common', 'amis-sdk', 'sdk.css'),

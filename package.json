@@ -1,7 +1,7 @@
 {
   "name": "develop",
   "displayName": "%extension.displayName%",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "private": true,
   "type": "commonjs",
   "icon": "images/icon.png",
@@ -10,7 +10,9 @@
   "engines": {
     "vscode": "^1.90.0"
   },
-  "categories": ["Other"],
+  "categories": [
+    "Other"
+  ],
   "activationEvents": [
     "onCustomEditor:tidestack.metadataEditor.authority",
     "onCustomEditor:tidestack.metadataEditor.menu",
@@ -20,9 +22,6 @@
     "onCustomEditor:tidestack.metadataEditor.appModule",
     "onCustomEditor:tidestack.metadataEditor.configuration",
     "onCustomEditor:tidestack.metadataEditor.configurationGroup",
-    "onCommand:tidestack.develop.configure",
-    "onCommand:tidestack.develop.openConfig",
-    "onCommand:tidestack.metadata.newFile",
     "onCommand:tidestack.metadata.newAuthorityFile",
     "onCommand:tidestack.metadata.newMenuFile",
     "onCommand:tidestack.metadata.newDevMenuFile",
@@ -31,6 +30,9 @@
     "onCommand:tidestack.metadata.newAppModuleFile",
     "onCommand:tidestack.metadata.newConfigurationFile",
     "onCommand:tidestack.metadata.newConfigurationGroupFile",
+    "onCommand:tidestack.develop.configure",
+    "onCommand:tidestack.develop.openConfig",
+    "onCommand:tidestack.metadata.newFile",
     "onCommand:tidestack.metadata.openSource",
     "onCommand:tidestack.metadata.openVisual"
   ],
@@ -39,11 +41,13 @@
     "commands": [
       {
         "command": "tidestack.develop.configure",
-        "title": "%command.configureProject%"
+        "title": "%settings.configureProjectAction%",
+        "category": "%settings.displayName%"
       },
       {
         "command": "tidestack.develop.openConfig",
-        "title": "%command.openConfigFiles%"
+        "title": "%settings.openConfigFilesAction%",
+        "category": "%settings.displayName%"
       },
       {
         "command": "tidestack.metadata.newFile",
@@ -92,6 +96,10 @@
     ],
     "submenus": [
       {
+        "id": "tidestack.develop.projectSubmenu",
+        "label": "%extension.displayName%"
+      },
+      {
         "id": "tidestack.metadata.newFileSubmenu",
         "label": "%metadata.new.submenu%"
       }
@@ -101,6 +109,16 @@
         {
           "submenu": "tidestack.metadata.newFileSubmenu",
           "group": "tidestack@1"
+        }
+      ],
+      "tidestack.develop.projectSubmenu": [
+        {
+          "command": "tidestack.develop.configure",
+          "group": "config@1"
+        },
+        {
+          "command": "tidestack.develop.openConfig",
+          "group": "config@2"
         }
       ],
       "tidestack.metadata.newFileSubmenu": [
@@ -150,6 +168,11 @@
         }
       ],
       "explorer/context": [
+        {
+          "submenu": "tidestack.develop.projectSubmenu",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation@18"
+        },
         {
           "submenu": "tidestack.metadata.newFileSubmenu",
           "when": "explorerResourceIsFolder",
@@ -206,8 +229,12 @@
         "viewType": "tidestack.metadataEditor.uiModel",
         "displayName": "%customEditor.uiModel%",
         "selector": [
-          { "filenamePattern": "*.ui-model.json" },
-          { "filenamePattern": "**/resources/META-INF/ouroboros/ui-model/**/*.json" }
+          {
+            "filenamePattern": "*.ui-model.json"
+          },
+          {
+            "filenamePattern": "**/resources/META-INF/ouroboros/ui-model/**/*.json"
+          }
         ],
         "priority": "default"
       },
@@ -215,8 +242,12 @@
         "viewType": "tidestack.metadataEditor.uiSchema",
         "displayName": "%customEditor.uiSchema%",
         "selector": [
-          { "filenamePattern": "*.ui-schema.json" },
-          { "filenamePattern": "**/resources/META-INF/ouroboros/ui-schema/**/*.json" }
+          {
+            "filenamePattern": "*.ui-schema.json"
+          },
+          {
+            "filenamePattern": "**/resources/META-INF/ouroboros/ui-schema/**/*.json"
+          }
         ],
         "priority": "default"
       },
@@ -224,9 +255,15 @@
         "viewType": "tidestack.metadataEditor.appModule",
         "displayName": "%customEditor.appModule%",
         "selector": [
-          { "filenamePattern": "**/src/main/metadata/app-modules.json" },
-          { "filenamePattern": "**/resources/META-INF/ouroboros/metadata/app-modules.json" },
-          { "filenamePattern": "**/resources/META-INF/ouroboros/app-modules.json" }
+          {
+            "filenamePattern": "**/src/main/metadata/app-modules.json"
+          },
+          {
+            "filenamePattern": "**/resources/META-INF/ouroboros/metadata/app-modules.json"
+          },
+          {
+            "filenamePattern": "**/resources/META-INF/ouroboros/app-modules.json"
+          }
         ],
         "priority": "default"
       },
@@ -234,9 +271,15 @@
         "viewType": "tidestack.metadataEditor.configuration",
         "displayName": "%customEditor.configuration%",
         "selector": [
-          { "filenamePattern": "**/src/main/metadata/configuration.json" },
-          { "filenamePattern": "**/resources/META-INF/ouroboros/metadata/configuration.json" },
-          { "filenamePattern": "**/resources/META-INF/ouroboros/configuration.json" }
+          {
+            "filenamePattern": "**/src/main/metadata/configuration.json"
+          },
+          {
+            "filenamePattern": "**/resources/META-INF/ouroboros/metadata/configuration.json"
+          },
+          {
+            "filenamePattern": "**/resources/META-INF/ouroboros/configuration.json"
+          }
         ],
         "priority": "default"
       },
@@ -244,9 +287,15 @@
         "viewType": "tidestack.metadataEditor.configurationGroup",
         "displayName": "%customEditor.configurationGroup%",
         "selector": [
-          { "filenamePattern": "**/src/main/metadata/configuration-groups.json" },
-          { "filenamePattern": "**/resources/META-INF/ouroboros/metadata/configuration-groups.json" },
-          { "filenamePattern": "**/resources/META-INF/ouroboros/configuration-groups.json" }
+          {
+            "filenamePattern": "**/src/main/metadata/configuration-groups.json"
+          },
+          {
+            "filenamePattern": "**/resources/META-INF/ouroboros/metadata/configuration-groups.json"
+          },
+          {
+            "filenamePattern": "**/resources/META-INF/ouroboros/configuration-groups.json"
+          }
         ],
         "priority": "default"
       }
@@ -255,15 +304,17 @@
   "scripts": {
     "build:shared": "node scripts/verify-shared-assets.mjs",
     "sync:i18n": "node scripts/sync-i18n-assets.mjs",
+    "sync:editor-registrations": "node scripts/sync-editor-registrations.mjs",
     "vendor:shared": "node scripts/vendor-shared-package.mjs",
     "copy:webview-assets": "node scripts/copy-webview-assets.mjs",
     "verify:webview-assets": "node scripts/verify-webview-assets.mjs",
     "verify:vsix-assets": "node scripts/verify-vsix-assets.mjs",
-    "compile": "npm run sync:i18n && npm run build:shared && tsc -p . && npm run vendor:shared && npm run copy:webview-assets && npm run verify:webview-assets",
+    "test": "node --test tests/package.test.mjs",
+    "compile": "npm run build:shared && npm run sync:i18n && npm run sync:editor-registrations && tsc -p . && npm run vendor:shared && npm run copy:webview-assets && npm run verify:webview-assets",
     "package:vsix": "npm run compile && npm exec --yes @vscode/vsce -- package --no-dependencies --allow-missing-repository --skip-license && npm run verify:vsix-assets"
   },
   "dependencies": {
-    "ouroboros-metadata-editor": "file:./common/amis-schema"
+    "ouroboros-metadata-editor": "file:./common/metadata-editor-runtime"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",

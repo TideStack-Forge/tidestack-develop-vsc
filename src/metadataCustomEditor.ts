@@ -2,13 +2,13 @@ import { randomBytes } from 'node:crypto'
 import * as vscode from 'vscode'
 import {
   createMetadataEditorHost,
-  createMetadataEditorState,
-  createMetadataEditorStateFromDocument,
+  createMetadataEditorSession,
   createMetadataEditorWebviewHtml,
+  createVsCodeMetadataEditorHostScript,
+  handleMetadataEditorSessionRequest,
   mapMetadataPackagedResourcePath,
   mapMetadataSourcePath,
   MetadataRevisionConflictError,
-  metadataHostErrorCode,
   normalizeIdeLocale,
   type MetadataEditorState,
   metadataEditorRuntimeFileName,
@@ -21,6 +21,7 @@ import {
 export interface MetadataCustomEditorRegistration {
   viewType: string
   metadataType: string
+  schemaName: string
 }
 
 interface PendingFlushRequest {
@@ -214,12 +215,18 @@ export class MetadataCustomEditorProvider implements vscode.CustomTextEditorProv
   ): Promise<void> {
     const host = createMetadataEditorHost(this.fileBridge)
     const uri = document.uri.toString()
+    const locale = this.getEditorLocale()
+    const session = createMetadataEditorSession({
+      host,
+      uri,
+      metadataType: this.registration.schemaName,
+      locale,
+    })
     const webviewAssetRoot = vscode.Uri.joinPath(this.context.extensionUri, 'dist', 'media')
     const amisSdkRoot = vscode.Uri.joinPath(webviewAssetRoot, 'amis-sdk')
     const runtimeRoot = vscode.Uri.joinPath(webviewAssetRoot, 'runtime')
     webviewPanel.webview.options = { enableScripts: true, localResourceRoots: [webviewAssetRoot] }
-    const locale = this.getEditorLocale()
-    const initialState = await createMetadataEditorState(host, uri, this.registration.metadataType, locale)
+    const initialState = await session.loadState()
     const htmlTemplate = await this.loadWebviewTemplate(runtimeRoot)
     webviewPanel.webview.html = this.renderHtml(
       webviewPanel.webview,
@@ -234,7 +241,7 @@ export class MetadataCustomEditorProvider implements vscode.CustomTextEditorProv
     const publishState = async (): Promise<void> => {
       await webviewPanel.webview.postMessage({
         type: 'state',
-        ...(await createMetadataEditorState(host, uri, this.registration.metadataType, locale)),
+        ...(await session.loadState()),
       })
     }
 
@@ -284,62 +291,11 @@ export class MetadataCustomEditorProvider implements vscode.CustomTextEditorProv
       if (message?.type === 'ready') {
         await publishState()
         await webviewPanel.webview.postMessage({ type: 'theme', theme: this.getAmisTheme() })
+        return
       }
-      if (message?.type === 'loadState') {
-        try {
-          await webviewPanel.webview.postMessage({
-            type: 'response',
-            requestId: message.requestId,
-            ok: true,
-            result: await createMetadataEditorState(host, uri, this.registration.metadataType, locale),
-          })
-        } catch (error) {
-          await webviewPanel.webview.postMessage({
-            type: 'response',
-            requestId: message.requestId,
-            ok: false,
-            error: error instanceof Error ? error.message : String(error),
-            errorCode: metadataHostErrorCode(error),
-          })
-        }
-      }
-      if (message?.type === 'saveText' && typeof message.text === 'string' && typeof message.revision === 'string') {
-        try {
-          const next = await host.applyChange(uri, message.text, message.revision)
-          await webviewPanel.webview.postMessage({
-            type: 'response',
-            requestId: message.requestId,
-            ok: true,
-            result: await createMetadataEditorStateFromDocument(host, uri, this.registration.metadataType, next, locale),
-          })
-        } catch (error) {
-          await webviewPanel.webview.postMessage({
-            type: 'response',
-            requestId: message.requestId,
-            ok: false,
-            error: error instanceof Error ? error.message : String(error),
-            errorCode: metadataHostErrorCode(error),
-          })
-        }
-      }
-      if (message?.type === 'validate' && typeof message.text === 'string') {
-        try {
-          const diagnostics = await host.validateDocument(uri, message.text)
-          await webviewPanel.webview.postMessage({
-            type: 'response',
-            requestId: message.requestId,
-            ok: true,
-            result: diagnostics,
-          })
-        } catch (error) {
-          await webviewPanel.webview.postMessage({
-            type: 'response',
-            requestId: message.requestId,
-            ok: false,
-            error: error instanceof Error ? error.message : String(error),
-            errorCode: metadataHostErrorCode(error),
-          })
-        }
+      const response = await handleMetadataEditorSessionRequest(session, message)
+      if (response) {
+        await webviewPanel.webview.postMessage(response)
       }
     })
   }
@@ -354,7 +310,6 @@ export class MetadataCustomEditorProvider implements vscode.CustomTextEditorProv
     locale: 'zh-CN' | 'en-US',
   ): string {
     const nonce = randomBytes(16).toString('base64')
-    const initialStateJson = toScriptJson(initialState)
     return createMetadataEditorWebviewHtml({
       template: htmlTemplate,
       fileName,
@@ -364,75 +319,18 @@ export class MetadataCustomEditorProvider implements vscode.CustomTextEditorProv
       amisSdkCssUri: webview.asWebviewUri(vscode.Uri.joinPath(amisSdkRoot, 'sdk.css')).toString(),
       amisThemeCssUri: webview.asWebviewUri(vscode.Uri.joinPath(amisSdkRoot, 'cxd.css')).toString(),
       amisDarkThemeCssUri: webview.asWebviewUri(vscode.Uri.joinPath(amisSdkRoot, 'dark.css')).toString(),
-      amisEditorRuntimeScriptUri: this.registration.metadataType === 'ui-schema'
+      amisEditorRuntimeScriptUri: this.registration.schemaName === 'ui-schema'
         ? webview.asWebviewUri(vscode.Uri.joinPath(runtimeRoot, 'metadata-editor-amis-editor.js')).toString()
         : undefined,
-      amisEditorCssUri: this.registration.metadataType === 'ui-schema'
+      amisEditorCssUri: this.registration.schemaName === 'ui-schema'
         ? webview.asWebviewUri(vscode.Uri.joinPath(runtimeRoot, 'metadata-editor-amis-editor.css')).toString()
         : undefined,
       runtimeScriptUri: webview.asWebviewUri(vscode.Uri.joinPath(runtimeRoot, metadataEditorRuntimeFileName)).toString(),
-      hostScript: `
-    const vscode = acquireVsCodeApi();
-    let nextRequestId = 1;
-    const pendingRequests = new Map();
-    function requestHost(type, payload) {
-      const requestId = String(nextRequestId++);
-      vscode.postMessage({ ...payload, type, requestId });
-      return new Promise((resolve, reject) => pendingRequests.set(requestId, { resolve, reject }));
-    }
-    window.OuroborosMetadataEditorHost = {
-      initialState: ${initialStateJson},
-      theme: ${JSON.stringify(this.getAmisTheme())},
-      locale: ${JSON.stringify(locale)},
-      transport: {
-        saveText: (text, revision) => requestHost('saveText', { text, revision }),
-        validate: (text) => requestHost('validate', { text }),
-        loadState: () => requestHost('loadState', {})
-      },
-      connect: editorApp => {
-        window.addEventListener('message', event => {
-          if (event.data.type === 'response') {
-            const pending = pendingRequests.get(event.data.requestId);
-            if (pending) {
-              pendingRequests.delete(event.data.requestId);
-              if (event.data.ok) {
-                pending.resolve(event.data.result);
-              } else {
-                const error = Object.assign(
-                  new Error(event.data.error || 'Metadata host request failed'),
-                  { code: event.data.errorCode || 'host-error' }
-                );
-                pending.reject(error);
-              }
-            }
-          }
-          if (event.data.type === 'state') {
-            editorApp.applyState(event.data);
-          }
-          if (event.data.type === 'diagnostics') {
-            editorApp.applyDiagnostics(event.data.diagnostics || []);
-          }
-          if (event.data.type === 'theme') {
-            editorApp.setTheme(event.data.theme);
-          }
-          if (event.data.type === 'flushPendingChanges') {
-            Promise.resolve(
-              typeof editorApp.flushPendingChanges === 'function' ? editorApp.flushPendingChanges() : undefined
-            ).then(() => {
-              vscode.postMessage({ type: 'flushPendingChangesResult', requestId: event.data.requestId, ok: true });
-            }).catch(error => {
-              vscode.postMessage({
-                type: 'flushPendingChangesResult',
-                requestId: event.data.requestId,
-                ok: false,
-                error: error && error.message ? error.message : String(error)
-              });
-            });
-          }
-        });
-        vscode.postMessage({ type: 'ready' });
-      }
-    };`,
+      hostScript: createVsCodeMetadataEditorHostScript({
+        initialState,
+        theme: this.getAmisTheme(),
+        locale,
+      }),
     })
   }
 
@@ -493,13 +391,4 @@ export class MetadataCustomEditorProvider implements vscode.CustomTextEditorProv
       pending.reject(error)
     }
   }
-}
-
-function toScriptJson(value: unknown): string {
-  return JSON.stringify(value)
-    .replace(/</g, '\\u003c')
-    .replace(/>/g, '\\u003e')
-    .replace(/&/g, '\\u0026')
-    .replace(/\u2028/g, '\\u2028')
-    .replace(/\u2029/g, '\\u2029')
 }

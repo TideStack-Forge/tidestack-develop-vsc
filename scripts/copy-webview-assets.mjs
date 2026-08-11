@@ -1,38 +1,28 @@
-import { cpSync, existsSync, mkdirSync, rmSync } from 'node:fs'
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const pluginRoot = dirname(dirname(fileURLToPath(import.meta.url)))
 const outputRoot = join(pluginRoot, 'dist', 'media')
 const amisSdkSource = join(pluginRoot, 'common', 'amis-sdk')
-const sharedRoot = join(pluginRoot, 'common', 'amis-schema')
+const runtimeRoot = join(pluginRoot, 'common', 'metadata-editor-runtime')
+const schemaDistRoot = join(pluginRoot, 'common', 'metadata-editor-schema', 'dist')
 const contractRoot = join(pluginRoot, 'common', 'contracts')
+const assetManifest = JSON.parse(readFileSync(join(schemaDistRoot, 'metadataEditorAssets.json'), 'utf8'))
 
 const assets = [
-  {
-    source: join(sharedRoot, 'runtime', 'metadata-editor-runtime.js'),
-    target: join(outputRoot, 'runtime', 'metadata-editor-runtime.js'),
-  },
-  {
-    source: join(sharedRoot, 'runtime', 'metadata-editor-webview.html'),
-    target: join(outputRoot, 'runtime', 'metadata-editor-webview.html'),
-  },
-  {
-    source: join(sharedRoot, 'runtime', 'metadata-editor-amis-editor.js'),
-    target: join(outputRoot, 'runtime', 'metadata-editor-amis-editor.js'),
-  },
-  {
-    source: join(sharedRoot, 'runtime', 'metadata-editor-amis-editor.css'),
-    target: join(outputRoot, 'runtime', 'metadata-editor-amis-editor.css'),
-  },
-  {
-    source: join(sharedRoot, 'src', 'metadataTypeContributions.json'),
-    target: join(outputRoot, 'metadataTypeContributions.json'),
-  },
-  {
-    source: join(contractRoot, 'tidestack-develop-config.json'),
-    target: join(pluginRoot, 'dist', 'contracts', 'tidestack-develop-config.json'),
-  },
+  ...assetManifest.runtimeFiles.map((relativePath) => ({
+    source: join(runtimeRoot, relativePath),
+    target: join(outputRoot, relativePath),
+  })),
+  ...assetManifest.schemaFiles.map((relativePath) => ({
+    source: join(schemaDistRoot, relativePath),
+    target: join(outputRoot, relativePath),
+  })),
+  ...assetManifest.contractFiles.map((fileName) => ({
+    source: join(contractRoot, fileName),
+    target: join(pluginRoot, 'dist', 'contracts', fileName),
+  })),
 ]
 
 const missing = assets.filter((asset) => !existsSync(asset.source))

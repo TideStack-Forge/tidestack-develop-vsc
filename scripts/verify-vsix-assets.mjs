@@ -1,22 +1,18 @@
 import { execFileSync } from 'node:child_process'
-import { existsSync, readdirSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const pluginRoot = dirname(dirname(fileURLToPath(import.meta.url)))
 const vsixPath = process.argv[2] || findSingleVsix(pluginRoot)
+const assetManifest = JSON.parse(readFileSync(join(pluginRoot, 'dist', 'media', 'metadataEditorAssets.json'), 'utf8'))
 
 const requiredEntries = [
-  'extension/dist/media/runtime/metadata-editor-runtime.js',
-  'extension/dist/media/runtime/metadata-editor-webview.html',
-  'extension/dist/media/runtime/metadata-editor-amis-editor.js',
-  'extension/dist/media/runtime/metadata-editor-amis-editor.css',
-  'extension/dist/media/metadataTypeContributions.json',
-  'extension/dist/media/amis-sdk/sdk.js',
-  'extension/dist/media/amis-sdk/sdk.css',
-  'extension/dist/media/amis-sdk/cxd.css',
-  'extension/dist/media/amis-sdk/dark.css',
+  ...assetManifest.runtimeFiles.map((relativePath) => `extension/dist/media/${relativePath}`),
+  ...assetManifest.schemaFiles.map((relativePath) => `extension/dist/media/${relativePath}`),
+  ...assetManifest.amisSdkRequiredFiles.map((relativePath) => `extension/dist/media/amis-sdk/${relativePath}`),
+  ...assetManifest.contractFiles.map((relativePath) => `extension/dist/contracts/${relativePath}`),
   'extension/dist/vendor/ouroboros-metadata-editor/browser/metadata-editor-host.js',
 ]
 
